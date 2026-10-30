@@ -1,5 +1,11 @@
 # Changelog
 
+Weekly notes live under [`changelog/`](changelog/). Each file covers one week starting Monday in Asia/Taipei. Existing semantic-version notes stay below and are not advanced unless a release is requested.
+
+## Current cycle
+
+- [2026.10.26](changelog/CHANGELOG-2026.10.26.md)
+
 ## 0.0.1
 
 ### Added

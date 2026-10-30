@@ -22,6 +22,7 @@ window.handleFiles = async (fileList, append = false) => {
     state.uploadBatchSeq += 1;
     const batchId = `batch-${state.uploadBatchSeq}`;
     const batchIndex = state.uploadBatchSeq;
+    let skippedUnsupported = 0;
 
     try {
         for (const file of files) {
@@ -35,6 +36,19 @@ window.handleFiles = async (fileList, append = false) => {
                 DOM.statusText.innerText = t("toast.readingImage", { name: file.name });
                 const imgEl = await loadImage(file);
                 newImages.push(createImageObject(file.name, imgEl, globalSettings, batchId, batchIndex));
+            } else if (isPptxFile(file)) {
+                DOM.statusText.innerText = t("toast.parsingSlides", { name: file.name });
+                const slideResult = await processPPTX(file);
+                if (!slideResult.images.length) {
+                    const key = slideResult.skippedUnsupported > 0
+                        ? "alert.unsupportedSlideImages"
+                        : "alert.noSlideImages";
+                    throw new Error(t(key));
+                }
+                skippedUnsupported += slideResult.skippedUnsupported;
+                slideResult.images.forEach(img => {
+                    newImages.push(createImageObject(img.name, img.element, globalSettings, batchId, batchIndex));
+                });
             }
         }
 
@@ -49,6 +63,10 @@ window.handleFiles = async (fileList, append = false) => {
         initScrollSpy();
         renderDirectoryModalContent();
 
+        if (skippedUnsupported > 0) {
+            showToast(t("toast.skippedUnsupportedImages", { count: skippedUnsupported }), "fa-triangle-exclamation");
+        }
+
         if (append && newImages.length > 0) {
             const firstId = newImages[0].id;
             const firstCard = document.getElementById(`card-${firstId}`);
@@ -60,6 +78,10 @@ window.handleFiles = async (fileList, append = false) => {
     } catch (e) {
         console.error(e);
         alert(t("alert.processingError", { message: e.message }));
+        if (state.images.length === 0) {
+            DOM.resultsArea.classList.add('hidden');
+            DOM.emptyState.classList.remove('hidden');
+        }
     } finally {
         DOM.statusMsg.classList.add('hidden');
     }

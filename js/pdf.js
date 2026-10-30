@@ -12,24 +12,31 @@ window.handlePdfUrl = async (url) => {
         return;
     }
 
+    const slidesId = parseGoogleSlidesId(trimmedUrl);
     DOM.statusMsg.classList.remove('hidden');
-    DOM.statusText.innerText = t("toast.downloadPdf");
+    DOM.statusText.innerText = slidesId ? t("toast.downloadSlides") : t("toast.downloadPdf");
 
     try {
-        const response = await fetch(trimmedUrl);
-        if (!response.ok) {
-            throw new Error(`${t("toast.downloadFailed")} (${response.status})`);
-        }
+        let file;
+        if (slidesId) {
+            file = await downloadGoogleSlidesFile(trimmedUrl);
+        } else {
+            const response = await fetch(trimmedUrl);
+            if (!response.ok) {
+                throw new Error(`${t("toast.downloadFailed")} (${response.status})`);
+            }
 
-        const blob = await response.blob();
-        const filename = trimmedUrl.split('/').pop() || 'download.pdf';
-        const file = new File([blob], filename, {
-            type: blob.type || 'application/pdf'
-        });
+            const blob = await response.blob();
+            const filename = trimmedUrl.split('/').pop() || 'download.pdf';
+            file = new File([blob], filename, {
+                type: blob.type || 'application/pdf'
+            });
+        }
         await handleFiles([file]);
     } catch (error) {
         console.error(error);
-        showToast(error.message || t("toast.downloadFailed"), "fa-triangle-exclamation");
+        const failedFetch = error && error.message === 'Failed to fetch';
+        showToast(failedFetch ? t("toast.downloadFailed") : (error.message || t("toast.downloadFailed")), "fa-triangle-exclamation");
         DOM.statusMsg.classList.add('hidden');
     }
 };
