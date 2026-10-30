@@ -16,5 +16,6 @@ Week of 2026-10-26 (Asia/Taipei, Monday start).
 
 ### Fixed
 
+- Run the GitHub Actions E2E image build on the default network. Buildx 0.37.2 and later reject `network: host` unless Compose passes `--allow=network.host`, which current Compose does not.
 - Restore the empty state when file processing fails before any image is added.
 - Show the download-failed message when a URL request fails without an HTTP response.

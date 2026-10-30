@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.test
-      network: host
     volumes:
       - .:/app
     environment:
